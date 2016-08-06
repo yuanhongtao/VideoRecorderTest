@@ -24,7 +24,6 @@ import java.io.File;
 import java.util.Calendar;
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback {
-
     private static final String TAG = "MainActivity";
     private SurfaceView mSurfaceview;
     private ImageButton mBtnStartStop;
@@ -40,26 +39,19 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //重写AutoFocusCallback接口
         mAutoFocusCallback=new Camera.AutoFocusCallback() {
         @Override
         public void onAutoFocus(boolean success, Camera camera) {
             if(success){
-                Log.i(TAG, "myAutoFocusCallback: success...");
+                Log.i(TAG, "AutoFocus: success...");
             }else {
-                Log.i(TAG, "myAutoFocusCallback: failure...");
+                Log.i(TAG, "AutoFocus: failure...");
             }
         }
     };
-    requestWindowFeature(Window.FEATURE_NO_TITLE);// 去掉标题栏
-    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
 
-    // 设置横屏显示
-    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
-    // 选择支持半透明模式,在有surfaceview的activity中使用。
-    getWindow().setFormat(PixelFormat.TRANSLUCENT);
-
+    initScreen();
     setContentView(R.layout.activity_main);
     mSurfaceview  = (SurfaceView)findViewById(R.id.capture_surfaceview);
     mBtnStartStop = (ImageButton) findViewById(R.id.ib_stop);
@@ -77,8 +69,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         @Override
         public void onClick(View v) {
             Toast.makeText(MainActivity.this,"相机设置待开发~",Toast.LENGTH_SHORT).show();
-//            Intent intent=new Intent(MainActivity.this,SetVideoActivity.class);
-//            startActivity(intent);
         }
     });
 
@@ -92,8 +82,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 }
 
     /**
-     * 获取系统时间
-     * @return
+     * 获取系统时间，保存文件以系统时间戳命名
      */
     public static String getDate(){
         Calendar ca = Calendar.getInstance();
@@ -112,7 +101,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
     /**
      * 获取SD path
-     * @return
      */
     public String getSDPath(){
         File sdDir = null;
@@ -126,6 +114,21 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
         return null;
     }
+
+    //初始化屏幕设置
+    public void initScreen(){
+        requestWindowFeature(Window.FEATURE_NO_TITLE);// 去掉标题栏
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
+
+        // 设置横屏显示
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        // 选择支持半透明模式,在有surfaceview的activity中使用。
+        getWindow().setFormat(PixelFormat.TRANSLUCENT);
+    }
+
+    //初始化Camera设置
     public void initCamera()
     {
         if(myCamera == null && !isView)
@@ -135,16 +138,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         }
         if(myCamera != null && !isView) {
             try {
-
                 myParameters = myCamera.getParameters();
                 myParameters.setPreviewSize(1920, 1080);
+                //设置对焦模式
                 myParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
                 myCamera.setParameters(myParameters);
                 myCamera.setPreviewDisplay(mSurfaceHolder);
                 myCamera.startPreview();
                 isView = true;
-//                myCamera.autoFocus(mAutoFocusCallback);
-
             } catch (Exception e) {
                 // TODO: handle exception
                 e.printStackTrace();
@@ -152,25 +153,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                         Toast.LENGTH_SHORT).show();
             }
         }
-//        if(myCamera != null && isView)
-//            myCamera.autoFocus(mAutoFocusCallback);
-
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
         // TODO Auto-generated method stub
-        // 将holder，这个holder为开始在onCreate里面取得的holder，将它赋给mSurfaceHolder
         mSurfaceHolder = holder;
-        Log.d(TAG, "surfaceChanged 1");
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         // TODO Auto-generated method stub
-        // 将holder，这个holder为开始在onCreate里面取得的holder，将它赋给mSurfaceHolder
-
         mSurfaceHolder = holder;
         initCamera();
         mBtnStartStop.setOnClickListener(new View.OnClickListener() {
@@ -192,23 +186,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                         // 这两项需要放在setOutputFormat之前
                         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
                         mRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-
-//                        // Set output file format
-//                        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-//
-//                        // 这两项需要放在setOutputFormat之后
-//                        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-//                        mRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.MPEG_4_SP);
-//                        mRecorder.setVideoSize(1920, 1080);
-//                        mRecorder.setVideoFrameRate(12);
                         mRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_720P));
                         mRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
 
-//                         Set output file path
+                        // Set output file path
                         String path = getSDPath();
                         if (path != null) {
 
-                            File dir = new File(path + "/recordtest");
+                            File dir = new File(path + "/VideoRecorderTest");
                             if (!dir.exists()) {
                                 dir.mkdir();
                             }
@@ -222,7 +207,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                             Log.d(TAG, "af mRecorder.start()");
                             mStartedFlg = true;
                             mBtnStartStop.setBackground(getDrawable(R.drawable.rec_stop));
-                            Log.d(TAG, "Start recording ...");
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -231,23 +215,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                     // stop
                     if (mStartedFlg) {
                         try {
-                            Log.d(TAG, "Stop recording ...");
-                            Log.d(TAG, "bf mRecorder.stop(");
                             mRecorder.stop();
-                            Log.d(TAG, "af mRecorder.stop(");
-                            mRecorder.reset();   // You can reuse the object by going back to setAudioSource() step
+                            mRecorder.reset();
                             mBtnStartStop.setBackground(getDrawable(R.drawable.rec_start));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
-                    mStartedFlg = false; // Set button status flag
+                    mStartedFlg = false;
                 }
             }
 
         });
-
-        Log.d(TAG, "surfaceChanged 2");
     }
 
     @Override
@@ -257,9 +236,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         mSurfaceview = null;
         mSurfaceHolder = null;
         if (mRecorder != null) {
-            mRecorder.release(); // Now the object cannot be reused
+            mRecorder.release();
             mRecorder = null;
-            Log.d(TAG, "surfaceDestroyed release mRecorder");
         }
     }
 

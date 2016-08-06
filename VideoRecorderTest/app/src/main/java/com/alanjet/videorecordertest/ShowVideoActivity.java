@@ -31,16 +31,19 @@ public class ShowVideoActivity extends AppCompatActivity {
         GetFiles();
         SimpleAdapter adapter = new SimpleAdapter(this,items,R.layout.item_show_video,
                 new String[]{"imageItem", "textItem"},new int[]{R.id.image_item, R.id.text_item});
-        gridView.setAdapter(adapter);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Uri uri = Uri.parse("sdcard/recordtest/"+FileToStr(videoList)[position]);//调用系统自带的播放器
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(uri, "video/*");
-                startActivity(intent);
-            }
-        });
+        if(adapter!=null){
+            gridView.setAdapter(adapter);
+            gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Uri uri = Uri.parse("sdcard/VideoRecorderTest/"+FileToStr(videoList)[position]);//调用系统自带的播放器
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(uri, "video/*");
+                    startActivity(intent);
+                }
+            });
+        }
+
     }
     /**
      * 把文件列表转换成字符串
@@ -59,7 +62,7 @@ public class ShowVideoActivity extends AppCompatActivity {
      */
     public void GetFiles(  ){
         int i=0;
-        File filePath=new File("sdcard/recordtest");
+        File filePath=new File("sdcard/VideoRecorderTest");
         if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
             File[] files = filePath.listFiles();
             for(i=0;i<files.length;i++){
